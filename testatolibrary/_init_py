@@ -1,0 +1,4 @@
+# testatolibrary/__init__.py
+
+def saludar():
+    return "Hola desde testatolibrary!"
