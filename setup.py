@@ -2,7 +2,7 @@
 import os
 from setuptools import setup, find_packages
 
-VERSION = os.getenv('PACKAGE_VERSION', '0.1.0')
+VERSION = os.getenv('VERSION', '0.1.0')
 
 setup(
     name="testatolibrary",
