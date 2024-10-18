@@ -53,8 +53,13 @@ jobs:
       run: |
         pipenv install twine
 
+    - name: Print repository URL
+      run: |
+        echo "Repository URL: https://${{ secrets.AWS_CODEARTIFACT_DOMAIN }}-${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }}.d.codeartifact.us-east-2.amazonaws.com/pypi/${{ secrets.AWS_CODEARTIFACT_REPOSITORY }}/"
+
     - name: Upload packages to CodeArtifact
       run: |
+        REPO_URL="https://${{ secrets.AWS_CODEARTIFACT_DOMAIN }}-${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }}.d.codeartifact.us-east-2.amazonaws.com/pypi/${{ secrets.AWS_CODEARTIFACT_REPOSITORY }}/"
         for file in dist/*; do
-          pipenv run twine upload --verbose --repository-url "https://${{ secrets.AWS_CODEARTIFACT_DOMAIN }}-${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }}.d.codeartifact.us-east-2.amazonaws.com/pypi/${{ secrets.AWS_CODEARTIFACT_REPOSITORY }}/" --username aws --password "${{ env.TOKEN }}" "$file"
+          pipenv run twine upload --verbose --repository-url "$REPO_URL" --username aws --password "${{ env.TOKEN }}" "$file"
         done
