@@ -1,5 +1,3 @@
-# .github/workflows/deploy.yml
-
 name: Deploy to AWS CodeArtifact with Pipenv
 
 on:
@@ -10,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -18,7 +16,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'  # Cambia a Python 3.10
+        python-version: '3.10'
 
     - name: Install Pipenv
       run: |
@@ -29,9 +27,7 @@ jobs:
       run: |
         pipenv install --dev
 
-   
-
-    - name: Build package
+    - name: Build package with dynamic version
       run: |
         pipenv run python setup.py sdist bdist_wheel
 
@@ -40,7 +36,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-2  # Cambia la región si es necesario
+        aws-region: us-east-2
 
     - name: Authenticate to AWS CodeArtifact
       id: login-codeartifact
