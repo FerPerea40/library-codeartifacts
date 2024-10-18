@@ -29,6 +29,12 @@ jobs:
       run: |
         pipenv install --dev
 
+    - name: Get version from Git tags
+      id: get_version
+      run: |
+        VERSION=$(git describe --tags --abbrev=0)
+        echo "PACKAGE_VERSION=${VERSION}" >> $GITHUB_ENV  # Guardar la versión en una variable de entorno
+
     - name: Build package
       run: |
         pipenv run python setup.py sdist bdist_wheel
