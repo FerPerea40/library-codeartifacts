@@ -1,0 +1,177 @@
+name: Generation Tag and Releases Notes
+on:
+  # Triggers the workflow on push or pull request events but only in the main branch
+  pull_request:
+    branches: [ main ]
+    types:
+      - opened
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  tagging:
+    name: Tagging and Releases
+    strategy:
+      fail-fast: false
+      matrix:
+        semver-version: [3.0.1]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+  
+    - name: Install semver in virtual environment
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install semver==${{ matrix.semver-version }}  
+        echo "semver installed"
+
+    - name: Set up Git identity
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+
+    - name: Get commits from push
+      id: get_commits
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const prNumber = context.payload.pull_request.number;
+          const { data: commits } = await github.rest.pulls.listCommits({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: prNumber
+          });
+          const commitMessages = commits.map(commit => `${commit.commit.message.replace(/\n/g, '\\n')}`).join('\n');
+          core.setOutput('commits', commitMessages);
+    
+    - name: Determine Version Change
+      id: determine_version
+      run: |
+        # Get the latest commit message from the push
+        all_commits="${{ steps.get_commits.outputs.commits }}"
+        # Initialize variables for version change type and new version.
+        change_type=""
+        new_version=""
+        # Get the current version from version.json.
+        current_version=$(jq -r .version version.json)
+        echo "current_version: $(jq -r .version version.json)"
+
+        if [[ $GITHUB_REF == "refs/heads/main" ]]; then
+          echo "current version: $current_version"
+          echo "version=$current_version" >>$GITHUB_OUTPUT
+        else
+          source venv/bin/activate
+          # Check if the commit message starts with [fix]
+          if [[ "$(python -c "import re; message='''$all_commits'''; print('[break]' in message.lower())")" == "True" ]]; then
+            change_type="major"  # It's a major change for breaking changes.
+            echo "Change type: breaking changes"  
+
+          elif [[ "$(python -c "import re; message='''$all_commits'''; print('[feat]' in message.lower())")" == "True" ]]; then
+            change_type="minor"  # It's a minor change for new features.
+            echo "Change type: Minor"     
+    
+          elif [[ "$(python -c "import re; message='''$all_commits'''; print('[fix]' in message.lower())")" == "True" ]]; then
+            change_type="patch"  # It's a patch change for bug fixes.
+            echo "Change type: Patch"  
+    
+          else
+            change_type="major"  # Default to major if neither [fix] nor [feat] is found
+            echo "Change Type: Major"
+          fi
+    
+          # Increment the version based on the change type
+          case $change_type in
+            "patch")
+              new_version=$(python -c "import semver; print(semver.bump_patch('$current_version'))")
+              echo "$new_version"
+              ;;
+            "minor")
+              new_version=$(python -c "import semver; print(semver.bump_minor('$current_version'))")
+              echo "$new_version"
+              ;;
+            "major")
+              new_version=$(python -c "import semver; print(semver.bump_major('$current_version'))")
+              echo "$new_version"
+              ;;
+          esac
+    
+          # Update the JSON file with the new version and change type
+          echo "version=$new_version" >>$GITHUB_OUTPUT
+          echo "{\"version\": \"$new_version\"}" > version.json
+        fi
+      env:
+        GITHUB_REF: ${{ github.ref }}
+    
+    - name: Create Git Tag
+      id: create_tag
+      run: |
+        # Extract version from version.json.
+        version=$(jq -r .version version.json)
+        git tag -a "v$version" -m "Release version $version"
+        git push origin "v$version"
+    
+    - name: Get current date
+      id: get_date
+      run: echo "DATE=$(date '+%Y-%m-%d')" >> $GITHUB_ENV
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v2.0.8
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: "v${{ steps.determine_version.outputs.version }}"
+        name: "v${{ steps.determine_version.outputs.version }}"
+        body: |
+          #### Date: ${{ env.DATE }}
+          ### Upgrade:         
+          ${{ steps.get_commits.outputs.commits }}
+          ### Colaborators: 
+          - PR Author: ${{ github.event.pull_request.user.login }}
+        draft: false
+        prerelease: false
+    
+    - name: Get Latest Release Info
+      id: get_release
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { data: release } = await github.rest.repos.getLatestRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+          core.setOutput("release_body", release.body);
+    
+    - name: Commit and Push Version Update
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+                
+        RELEASE_BODY="${{ steps.get_release.outputs.release_body }}"
+        echo "Release Body:"
+        echo "$RELEASE_BODY"
+                
+        VERSION=$(jq -r '.version' version.json)
+        NEW_RELEASE_SECTION=$(printf "## Latest Changes\n \n### Version %s\n%s\n\n" "$VERSION" "$RELEASE_BODY")
+
+        { printf "%s" "$NEW_RELEASE_SECTION"; sed -n '/## Latest Changes/,$p' release-notes.md | tail -n +2; } > temp && mv temp release-notes.md
+         
+        git add version.json release-notes.md
+        git commit -m "Bump version to $VERSION"
+        
+        git pull --rebase origin ${{ github.event.pull_request.head.ref }}
+
+        git push origin HEAD:${{ github.event.pull_request.head.ref }}
