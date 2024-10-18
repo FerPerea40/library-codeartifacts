@@ -1,5 +1,11 @@
 ## Latest Changes
  
+### Version 0.2.0
+#### Date: 2024-10-18
+### Upgrade:         
+[FEAT] Add functions
+### Colaborators: 
+- PR Author: FerPerea40 
 ### Version 0.1.10
 #### Date: 2024-10-18
 ### Upgrade:         
