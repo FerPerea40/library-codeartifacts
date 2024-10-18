@@ -52,4 +52,4 @@ jobs:
     - name: Upload package to CodeArtifact
       run: |
         pipenv run pip install twine
-        pipenv run twine upload --repository-url https://${{ secrets.AWS_CODEARTIFACT_DOMAIN }}-${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }}.d.codeartifact.us-east-1.amazonaws.com/pypi/${{ secrets.AWS_CODEARTIFACT_REPOSITORY }}/ --username aws --password ${{ env.TOKEN }} dist/*
+        pipenv run twine upload --repository-url https://${{ secrets.AWS_CODEARTIFACT_DOMAIN }}-${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }}.d.codeartifact.us-east-2.amazonaws.com/pypi/${{ secrets.AWS_CODEARTIFACT_REPOSITORY }}/ --username aws --password ${{ env.TOKEN }} dist/*
