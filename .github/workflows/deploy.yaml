@@ -49,10 +49,10 @@ jobs:
         echo "::add-mask::$TOKEN"
         echo "TOKEN=$TOKEN" >> $GITHUB_ENV
 
-    - name: Install Twine globally
+    - name: Install Twine
       run: |
-        pip install twine
+        pipenv install twine
 
     - name: Upload package to CodeArtifact
       run: |
-        twine upload --repository-url https://${{ secrets.AWS_CODEARTIFACT_DOMAIN }}-${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }}.d.codeartifact.us-east-2.amazonaws.com/pypi/${{ secrets.AWS_CODEARTIFACT_REPOSITORY }}/ --username aws --password ${{ env.TOKEN }} dist/*
+        pipenv run twine upload --verbose --repository-url https://${{ secrets.AWS_CODEARTIFACT_DOMAIN }}-${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }}.d.codeartifact.us-east-2.amazonaws.com/pypi/${{ secrets.AWS_CODEARTIFACT_REPOSITORY }}/ --username aws --password ${{ env.TOKEN }} dist/*
