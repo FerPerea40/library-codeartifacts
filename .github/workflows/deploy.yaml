@@ -41,6 +41,14 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-2
+    
+    - name: Get Version 
+      id: determine_version
+      run: |
+        # Get the current version from version.json.
+        current_version=$(jq -r .version version.json)
+        echo "current_version: $(jq -r .version version.json)"
+        echo "VERSION=$current_version" >>$GITHUB_ENV
 
     - name: Authenticate to AWS CodeArtifact
       id: login-codeartifact
