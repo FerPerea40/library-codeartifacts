@@ -53,7 +53,7 @@ jobs:
             repo: context.repo.repo,
             pull_number: prNumber
           });
-          const commitMessages = commits.map(commit => - ${commit.commit.message.replace(/\n/g, '\\n')}).join('\n');
+          const commitMessages = commits.map(commit => `${commit.commit.message.replace(/\n/g, '\\n')}`).join('\n');
           core.setOutput('commits', commitMessages);
     
     - name: Determine Version Change
