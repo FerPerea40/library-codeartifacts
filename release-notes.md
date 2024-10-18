@@ -1,5 +1,11 @@
 ## Latest Changes
  
+### Version 0.1.10
+#### Date: 2024-10-18
+### Upgrade:         
+[fix] Again
+### Colaborators: 
+- PR Author: FerPerea40 
 ### Version 0.1.9
 #### Date: 2024-10-18
 ### Upgrade:         
