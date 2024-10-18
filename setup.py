@@ -6,7 +6,7 @@ VERSION = os.getenv('PACKAGE_VERSION', '0.1.0')
 
 setup(
     name="testatolibrary",
-    version=VERSION,
+    version="0.1.0",
     packages=find_packages(),
     install_requires=[],  # Agrega aquí las dependencias de tu biblioteca si las hay
     description="Una biblioteca de prueba para AWS CodeArtifact",
