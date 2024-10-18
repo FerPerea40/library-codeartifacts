@@ -1,5 +1,11 @@
 ## Latest Changes
  
+### Version 0.1.6
+#### Date: 2024-10-18
+### Upgrade:         
+[Fix] Fix region aws
+### Colaborators: 
+- PR Author: FerPerea40 
 ### Version 0.1.5
 #### Date: 2024-10-18
 ### Upgrade:         
