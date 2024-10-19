@@ -1,12 +1,16 @@
 # setup.py
 import os
+import json
 from setuptools import setup, find_packages
 
-VERSION = os.getenv('VERSION', '0.1.0')
-
+def get_version():
+    version_file = os.path.join(os.path.dirname(__file__), 'version.json')
+    with open(version_file, 'r') as f:
+        version_data = json.load(f)
+        return version_data['version']
 setup(
     name="testatolibrary",
-    version=VERSION,
+    version=get_version(),
     packages=find_packages(),
     install_requires=[],  # Agrega aquí las dependencias de tu biblioteca si las hay
     description="Una biblioteca de prueba para AWS CodeArtifact",
